@@ -1,10 +1,98 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:panneau_deme/pages/accueil.dart';
+import 'package:panneau_deme/pages/appareilPage.dart';
+import 'package:panneau_deme/pages/authentification/authPage.dart';
+import 'package:panneau_deme/services/appareilService.dart';
+import 'package:panneau_deme/services/authPageService.dart';
+import 'package:panneau_deme/services/dimensionnementService.dart';
+import 'package:panneau_deme/services/electricienService.dart';
+import 'package:panneau_deme/services/equipementService.dart';
+import 'package:panneau_deme/services/meteoService.dart';
+import 'package:panneau_deme/services/userService.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthPageService()),
+        ChangeNotifierProvider(create: (context) => UserService()),
+        ChangeNotifierProvider(create: (context) => MeteoService()),
+        ChangeNotifierProvider(create: (context) => AppareilService()),
+        ChangeNotifierProvider(create: (context) => DimensionnementService()),
+        ChangeNotifierProvider(create: (context) => ElectricienService()),
+        ChangeNotifierProvider(create: (context) => EquipementService())
+      ],
+      child: const MyApp(),
+    )
+  );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  //bouléen pour la condition de redirection de page
+  bool? _isLogin ;
+
+  //Verifie si un utilisateur est déjà connecter
+  _verifyUserConnected() async{
+    await Provider.of<UserService>(context,listen: false).getUserFromSharedPreferences().then((value){
+      setState(() {
+        _isLogin = true;
+      });
+    }).catchError((onError){
+      setState(() {
+        _isLogin = false;
+      });
+    });
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    _verifyUserConnected();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          // This is the theme of your application.
+          //
+          // TRY THIS: Try running your application with "flutter run". You'll see
+          // the application has a blue toolbar. Then, without quitting the app,
+          // try changing the seedColor in the colorScheme below to Colors.green
+          // and then invoke "hot reload" (save your changes or press the "hot
+          // reload" button in a Flutter-supported IDE, or press "r" if you used
+          // the command line to start the app).
+          //
+          // Notice that the counter didn't reset back to zero; the application
+          // state is not lost during the reload. To reset the state, use hot
+          // restart instead.
+          //
+          // This works for code too, not just values: Most code changes can be
+          // tested with just a hot reload.
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: (_isLogin==null)?Scaffold(body: Center(child: Image.asset("assets/icon/launch_image.png"),),): _isLogin! ? const Accueil() : const AuthPage() //const MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }
+}
+
+
+/*class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
@@ -12,6 +100,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -31,10 +120,10 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const AuthPage() //const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
-}
+}*/
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
